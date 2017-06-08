@@ -1,6 +1,4 @@
-[![build status](https://gitlab.com/payingcloud-commons/commons-weixin/badges/master/build.svg)](https://gitlab.com/payingcloud-commons/commons-weixin/commits/master)
-
-# commons-weixin
+# payingcloud-weixin
 Weixin SDK for Java
 
 ## 基本接口
