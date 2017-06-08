@@ -1,0 +1,112 @@
+description = 'Java SDK for weixin API'
+version '1.0'
+
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.bintray'
+
+dependencies {
+    compile 'org.apache.httpcomponents:httpclient:4.5.3'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.8.7'
+    compile 'dom4j:dom4j:1.6.1'
+    compile 'org.apache.commons:commons-lang3:3.5'
+    compile 'org.slf4j:slf4j-api:1.7.25'
+
+    testCompile 'org.slf4j:slf4j-jdk14:1.7.25'
+    testCompile 'junit:junit:4.12'
+}
+
+// Bintray Upload
+def artiId = project.name
+def scmUrl = "https://github.com/payingcloud/${rootProject.name}"
+
+// Create the pom configuration:
+def pomConfig = {
+    licenses {
+        license {
+            name "The Apache Software License, Version 2.0"
+            url "http://www.apache.org/licenses/LICENSE-2.0.txt"
+            distribution "repo"
+        }
+    }
+    developers {
+        developer {
+            id "cvw643"
+            name "Huang Yuqiang"
+            email "hyq@payingcloud.cn"
+        }
+    }
+    scm {
+        url scmUrl
+    }
+}
+
+// Create the publication with the pom configuration:
+publishing {
+    publications {
+        Maven(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+            groupId project.group
+            artifactId artiId
+            version = project.version
+            pom.withXml {
+                def root = asNode()
+                root.appendNode('description', project.description)
+                root.appendNode('name', artiId)
+                root.appendNode('url', scmUrl)
+                root.children().last() + pomConfig
+            }
+        }
+    }
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    from javadoc.destinationDir
+    classifier = 'javadoc'
+}
+
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+
+bintray {
+    user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
+    key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
+    publications = ['Maven']
+    dryRun = false //[Default: false] Whether to run this as dry-run, without deploying
+    publish = true //[Default: false] Whether version should be auto published after an upload
+    override = false //[Default: false] Whether to override version artifacts already published
+    pkg {
+        repo = 'maven'
+        name = artiId
+        desc = project.description
+        userOrg = 'payingcloud'
+        licenses = ['Apache-2.0']
+        vcsUrl = scmUrl + ".git"
+        publicDownloadNumbers = true
+        version {
+            name = project.version
+            gpg {
+                sign = true //Determines whether to GPG sign the files. The default is false
+//                passphrase = 'passphrase' //Optional. The passphrase for GPG signing', The plugin allows using Bintray supports for files GPG signing. To have your Version files signed by Bintray, you first need to configure your public and private GPG keys in Bintray, and then add the gpg closure inside the version closure as shown in the below Plugin DSL section. If your GPG keys are not configured in Bintray and sign is true, then the files will be signed using Bintray's internal keys.
+            }
+            mavenCentralSync {
+                sync = true //[Default: true] Determines whether to sync the version to Maven Central.
+                user = project.hasProperty('ossrhUsername') ? project.property('ossrhUsername') : System.getenv('OSSRH_USERNAME')
+                //OSS user token: mandatory
+                password = project.hasProperty('ossrhPassword') ? project.property('ossrhPassword') : System.getenv('OSSRH_PASSWORD')
+                //OSS user password: mandatory
+                close = '1'
+                //Optional property. By default the staging repository is closed and artifacts are released to Maven Central. You can optionally turn this behaviour off (by puting 0 as value) and release the version manually.
+            }
+        }
+    }
+}

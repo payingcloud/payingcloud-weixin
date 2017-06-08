@@ -1,0 +1,8 @@
+description = 'Token server for weixin'
+version '0.2.13'
+
+apply plugin: 'org.springframework.boot'
+
+dependencies {
+    compile 'org.springframework.boot:spring-boot-starter-web'
+}

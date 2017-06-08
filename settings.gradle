@@ -1,0 +1,4 @@
+rootProject.name = 'payingcloud-weixin'
+include 'payingcloud-weixin-java'
+include 'payingcloud-weixin-tokenserver'
+
